@@ -1,0 +1,255 @@
+
+import React, { useRef } from 'react';
+import { Node, NodeType, NodeData } from '../../types';
+
+interface NodeComponentProps {
+  node: Node;
+  onMouseDown: (e: React.MouseEvent) => void;
+  onStartConnect: (e: React.MouseEvent) => void;
+  onEndConnect: (e: React.MouseEvent) => void;
+  onChange: (data: Partial<NodeData>) => void;
+  onProcess: () => void;
+  onDelete: () => void;
+}
+
+export const NodeComponent: React.FC<NodeComponentProps> = ({
+  node,
+  onMouseDown,
+  onStartConnect,
+  onEndConnect,
+  onChange,
+  onProcess,
+  onDelete
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (evt.target?.result) {
+          onChange({ 
+            imageName: file.name,
+            imageData: evt.target.result as string 
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // --- Render Content Based on Type ---
+  const renderContent = () => {
+    switch (node.type) {
+      case NodeType.INPUT_IMAGE:
+        return (
+          <div className="space-y-3">
+             <div 
+                className="h-32 w-full bg-background/50 rounded border border-dashed border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+             >
+                {node.data.imageData ? (
+                    <img src={node.data.imageData} alt="Input" className="w-full h-full object-cover" />
+                ) : (
+                    <div className="text-center p-2 text-xs text-gray-400">
+                        Click to upload<br/>Source Image
+                    </div>
+                )}
+             </div>
+             <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleImageUpload}
+             />
+          </div>
+        );
+
+      case NodeType.NANO_EDIT:
+        return (
+            <div className="space-y-3">
+                <textarea 
+                    className="w-full bg-background/50 rounded border border-border p-2 text-xs text-white focus:border-secondary outline-none resize-none"
+                    rows={3}
+                    placeholder="E.g. 'Add a neon glow', 'Make it cyberpunk'..."
+                    value={node.data.prompt || ''}
+                    onChange={(e) => onChange({ prompt: e.target.value })}
+                />
+                <div className="flex justify-between items-center">
+                    <span className={`text-[10px] uppercase tracking-wider font-bold ${
+                        node.data.status === 'error' ? 'text-red-500' : 
+                        node.data.status === 'success' ? 'text-green-500' : 
+                        node.data.status === 'processing' ? 'text-yellow-500' : 'text-gray-500'
+                    }`}>
+                        {node.data.status || 'READY'}
+                    </span>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onProcess(); }}
+                        disabled={node.data.status === 'processing'}
+                        className="bg-secondary hover:bg-pink-600 text-white text-xs px-3 py-1 rounded shadow-lg transition-colors disabled:opacity-50"
+                    >
+                        {node.data.status === 'processing' ? 'Generating...' : 'Run Flow'}
+                    </button>
+                </div>
+                {node.data.errorMessage && (
+                    <div className="text-[10px] text-red-400 leading-tight">
+                        {node.data.errorMessage}
+                    </div>
+                )}
+            </div>
+        );
+
+      case NodeType.GEMINI_PRO:
+        return (
+            <div className="space-y-3">
+                <div className="text-[10px] text-gray-400 mb-1">Input Prompt / Instructions</div>
+                <textarea 
+                    className="w-full bg-background/50 rounded border border-border p-2 text-xs text-white focus:border-accent outline-none resize-none"
+                    rows={3}
+                    placeholder="E.g. 'Describe this image in detail', 'Analyze the composition'..."
+                    value={node.data.prompt || ''}
+                    onChange={(e) => onChange({ prompt: e.target.value })}
+                />
+                <div className="flex justify-between items-center">
+                    <span className={`text-[10px] uppercase tracking-wider font-bold ${
+                        node.data.status === 'error' ? 'text-red-500' : 
+                        node.data.status === 'success' ? 'text-accent' : 
+                        node.data.status === 'processing' ? 'text-yellow-500' : 'text-gray-500'
+                    }`}>
+                        {node.data.status || 'READY'}
+                    </span>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onProcess(); }}
+                        disabled={node.data.status === 'processing'}
+                        className="bg-accent hover:bg-violet-600 text-white text-xs px-3 py-1 rounded shadow-lg transition-colors disabled:opacity-50"
+                    >
+                        {node.data.status === 'processing' ? 'Reasoning...' : 'Analyze'}
+                    </button>
+                </div>
+                
+                {/* Result Display for Text Output */}
+                {node.data.analysisResult && (
+                    <div className="mt-2 max-h-32 overflow-y-auto bg-black/30 p-2 rounded border border-white/10 text-[11px] text-gray-300 leading-relaxed">
+                        {node.data.analysisResult}
+                    </div>
+                )}
+
+                {node.data.errorMessage && (
+                    <div className="text-[10px] text-red-400 leading-tight">
+                        {node.data.errorMessage}
+                    </div>
+                )}
+            </div>
+        );
+
+      case NodeType.OUTPUT_PREVIEW:
+        return (
+            <div className="h-48 w-full bg-background/50 rounded border border-border flex items-center justify-center overflow-hidden relative">
+                {node.data.outputImage ? (
+                    <img src={node.data.outputImage} alt="Output" className="w-full h-full object-contain" />
+                ) : (
+                    <span className="text-xs text-gray-500">Waiting for result...</span>
+                )}
+                {node.data.outputImage && (
+                    <a 
+                        href={node.data.outputImage} 
+                        download="flowgen-output.png"
+                        className="absolute bottom-2 right-2 bg-black/70 text-white p-1 rounded hover:bg-primary"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    </a>
+                )}
+            </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+
+  // Colors based on type
+  let borderColor = 'border-gray-600';
+  let shadowColor = 'shadow-xl';
+  let headerColor = 'bg-gray-600';
+  let label = node.label;
+
+  if (node.type === NodeType.INPUT_IMAGE) {
+      borderColor = 'border-blue-500/50';
+      headerColor = 'bg-blue-600';
+  } else if (node.type === NodeType.NANO_EDIT) {
+      borderColor = 'border-secondary/50';
+      shadowColor = 'shadow-[0_0_20px_-5px_rgba(236,72,153,0.3)]';
+      headerColor = 'bg-secondary';
+  } else if (node.type === NodeType.GEMINI_PRO) {
+      borderColor = 'border-accent/50';
+      shadowColor = 'shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]';
+      headerColor = 'bg-accent';
+  } else if (node.type === NodeType.OUTPUT_PREVIEW) {
+      borderColor = 'border-green-500/50';
+      headerColor = 'bg-green-600';
+  }
+
+  return (
+    <div 
+      className={`absolute w-72 bg-surface/95 backdrop-blur-md rounded-lg border ${borderColor} ${shadowColor} flex flex-col z-10 select-none transition-shadow duration-300`}
+      style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }}
+      onMouseDown={onMouseDown}
+    >
+      {/* Node Header */}
+      <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-lg">
+        <span className="text-xs font-bold text-gray-200 uppercase tracking-wide flex items-center gap-2">
+            {/* Icon based on type */}
+            {node.type === NodeType.GEMINI_PRO && (
+                 <svg className="w-3 h-3 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.8L19.3 19H4.7L12 5.8z"/></svg>
+            )}
+            {label}
+        </span>
+        <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${headerColor} shadow-[0_0_5px_currentColor]`} />
+            <button 
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                className="text-gray-500 hover:text-red-500 transition-colors"
+                title="Delete Node"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+      </div>
+
+      {/* Node Body */}
+      <div className="p-3">
+        {renderContent()}
+      </div>
+
+      {/* Handles */}
+      <div className="relative h-0">
+        {/* Input Handle (Left) - Not for Input Node */}
+        {node.type !== NodeType.INPUT_IMAGE && (
+             <div 
+             className="absolute -left-3 -top-24 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-white cursor-crosshair node-handle z-20"
+             title="Input"
+             onMouseUp={onEndConnect}
+           >
+             <div className="w-2 h-2 bg-gray-400 rounded-full" />
+           </div>
+        )}
+
+        {/* Output Handle (Right) - Not for Output Node */}
+        {node.type !== NodeType.OUTPUT_PREVIEW && node.type !== NodeType.GEMINI_PRO && (
+             <div 
+             className="absolute -right-3 -top-24 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-primary cursor-crosshair node-handle z-20"
+             title="Output"
+             onMouseDown={onStartConnect}
+           >
+             <div className="w-2 h-2 bg-primary rounded-full" />
+           </div>
+        )}
+      </div>
+    </div>
+  );
+};

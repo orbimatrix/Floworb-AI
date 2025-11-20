@@ -1,0 +1,5 @@
+{
+  "name": "FlowGen AI",
+  "description": "A professional node-based SaaS platform for real-time AI image generation and editing using Gemini 3 and Nano Banana models.",
+  "requestFramePermissions": []
+}
