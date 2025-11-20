@@ -4,6 +4,7 @@ import { Node, NodeType, NodeData } from '../../types';
 
 interface NodeComponentProps {
   node: Node;
+  isDragging?: boolean;
   onMouseDown: (e: React.MouseEvent) => void;
   onTouchStart: (e: React.TouchEvent) => void;
   onStartConnect: (e: React.MouseEvent | React.TouchEvent) => void;
@@ -15,6 +16,7 @@ interface NodeComponentProps {
 
 export const NodeComponent: React.FC<NodeComponentProps> = ({
   node,
+  isDragging,
   onMouseDown,
   onTouchStart,
   onStartConnect,
@@ -68,6 +70,22 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                 onChange={handleImageUpload}
              />
           </div>
+        );
+
+      case NodeType.PROMPT_TEMPLATE:
+        return (
+            <div className="space-y-3">
+                <div className="text-[10px] text-gray-400 mb-1">Reuse this template in flows</div>
+                <textarea 
+                    className="w-full bg-background/50 rounded border border-border p-2 text-xs text-white focus:border-teal-400 outline-none resize-none"
+                    rows={3}
+                    placeholder="E.g., 'Cyberpunk style, neon lights...'"
+                    value={node.data.prompt || ''}
+                    onChange={(e) => onChange({ prompt: e.target.value })}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                />
+            </div>
         );
 
       case NodeType.NANO_EDIT:
@@ -198,24 +216,36 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
       borderColor = 'border-accent/50';
       shadowColor = 'shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]';
       headerColor = 'bg-accent';
+  } else if (node.type === NodeType.PROMPT_TEMPLATE) {
+      borderColor = 'border-teal-500/50';
+      shadowColor = 'shadow-[0_0_20px_-5px_rgba(45,212,191,0.3)]';
+      headerColor = 'bg-teal-600';
   } else if (node.type === NodeType.OUTPUT_PREVIEW) {
       borderColor = 'border-green-500/50';
       headerColor = 'bg-green-600';
   }
 
+  const zIndex = isDragging ? 50 : 10;
+
   return (
     <div 
-      className={`absolute w-72 bg-surface/95 backdrop-blur-md rounded-lg border ${borderColor} ${shadowColor} flex flex-col z-10 select-none transition-shadow duration-300`}
-      style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }}
+      className={`absolute w-72 bg-surface/95 backdrop-blur-md rounded-lg border ${borderColor} ${shadowColor} flex flex-col select-none transition-shadow duration-300`}
+      style={{ 
+          transform: `translate(${node.position.x}px, ${node.position.y}px)`,
+          zIndex: zIndex
+      }}
       onMouseDown={onMouseDown}
       onTouchStart={onTouchStart}
     >
       {/* Node Header */}
-      <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-lg">
+      <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-lg h-10 cursor-move">
         <span className="text-xs font-bold text-gray-200 uppercase tracking-wide flex items-center gap-2">
             {/* Icon based on type */}
             {node.type === NodeType.GEMINI_PRO && (
                  <svg className="w-3 h-3 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.8L19.3 19H4.7L12 5.8z"/></svg>
+            )}
+            {node.type === NodeType.PROMPT_TEMPLATE && (
+                <svg className="w-3 h-3 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
             )}
             {label}
         </span>
@@ -235,32 +265,32 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
       </div>
 
       {/* Node Body */}
-      <div className="p-3 relative">
+      <div className="p-3 relative cursor-default">
         {renderContent()}
         
-        {/* Handles - Centered vertically relative to body/container */}
+        {/* Handles - Fixed relative to top for consistent alignment */}
         
         {/* Input Handle (Left) */}
-        {node.type !== NodeType.INPUT_IMAGE && (
+        {node.type !== NodeType.INPUT_IMAGE && node.type !== NodeType.PROMPT_TEMPLATE && (
              <div 
-             className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-white cursor-crosshair node-handle z-20 shadow-md"
+             className="absolute -left-5 top-14 w-8 h-8 bg-transparent flex items-center justify-center cursor-crosshair node-handle z-20 group"
              title="Input"
              onMouseUp={onEndConnect}
              onTouchEnd={onEndConnect}
            >
-             <div className="w-2 h-2 bg-gray-400 rounded-full" />
+             <div className="w-3 h-3 bg-surface border-2 border-gray-400 rounded-full group-hover:border-white group-hover:scale-125 transition-all shadow-sm" />
            </div>
         )}
 
         {/* Output Handle (Right) */}
         {node.type !== NodeType.OUTPUT_PREVIEW && (
              <div 
-             className="absolute -right-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-primary cursor-crosshair node-handle z-20 shadow-md"
+             className="absolute -right-5 top-14 w-8 h-8 bg-transparent flex items-center justify-center cursor-crosshair node-handle z-20 group"
              title="Output"
              onMouseDown={onStartConnect}
              onTouchStart={onStartConnect}
            >
-             <div className="w-2 h-2 bg-primary rounded-full" />
+             <div className="w-3 h-3 bg-surface border-2 border-primary rounded-full group-hover:border-white group-hover:scale-125 transition-all shadow-sm" />
            </div>
         )}
       </div>

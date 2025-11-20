@@ -3,6 +3,7 @@ export enum NodeType {
   INPUT_IMAGE = 'INPUT_IMAGE',
   NANO_EDIT = 'NANO_EDIT', // The "Nano Banana" / Gemini Flash Image node
   GEMINI_PRO = 'GEMINI_PRO', // The Gemini 3 Pro node for complex reasoning
+  PROMPT_TEMPLATE = 'PROMPT_TEMPLATE', // Reusable text prompts
   OUTPUT_PREVIEW = 'OUTPUT_PREVIEW',
 }
 

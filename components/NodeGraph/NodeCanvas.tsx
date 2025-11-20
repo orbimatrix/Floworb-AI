@@ -44,13 +44,19 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
     if (!node) return;
     
     const coords = getClientCoords(e);
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    // Ensure we get the rect of the Node element, not the clicked child
+    const targetElement = (e.currentTarget as HTMLElement); 
+    const rect = targetElement.getBoundingClientRect();
     
     setDragOffset({
       x: coords.clientX - rect.left,
       y: coords.clientY - rect.top
     });
     setDraggingNodeId(id);
+    
+    // Bring to front by moving to end of array
+    const otherNodes = nodes.filter(n => n.id !== id);
+    onNodesChange([...otherNodes, node]);
   };
 
   const handleMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -120,6 +126,14 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
     );
   };
 
+  // Node width is w-72 (288px).
+  // Handle vertical position is top-14 (56px).
+  // Left Handle Center X = NodeX - 4.
+  // Right Handle Center X = NodeX + 292.
+  const HANDLE_Y_OFFSET = 56;
+  const OUTPUT_X_OFFSET = 292;
+  const INPUT_X_OFFSET = -4;
+
   return (
     <div 
       ref={canvasRef}
@@ -147,9 +161,8 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
           const target = nodes.find(n => n.id === conn.targetId);
           if (!source || !target) return null;
 
-          // Simple calculation for handle positions: Source Right, Target Left
-          const start = { x: source.position.x + 250, y: source.position.y + 60 }; // 250 is approx node width
-          const end = { x: target.position.x, y: target.position.y + 60 };
+          const start = { x: source.position.x + OUTPUT_X_OFFSET, y: source.position.y + HANDLE_Y_OFFSET }; 
+          const end = { x: target.position.x + INPUT_X_OFFSET, y: target.position.y + HANDLE_Y_OFFSET };
           
           return (
             <g key={conn.id} className="pointer-events-auto cursor-pointer group" onClick={() => onConnectionDelete(conn.id)}>
@@ -163,7 +176,7 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
         {connectingSourceId && (() => {
           const source = nodes.find(n => n.id === connectingSourceId);
           if (!source) return null;
-          const start = { x: source.position.x + 250, y: source.position.y + 60 };
+          const start = { x: source.position.x + OUTPUT_X_OFFSET, y: source.position.y + HANDLE_Y_OFFSET };
           return renderPath(start, mousePos, true);
         })()}
       </svg>
@@ -173,6 +186,7 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
         <NodeComponent
           key={node.id}
           node={node}
+          isDragging={draggingNodeId === node.id}
           onMouseDown={(e) => handleStartNodeDrag(e, node.id)}
           onTouchStart={(e) => handleStartNodeDrag(e, node.id)}
           onStartConnect={(e) => handleStartConnection(e, node.id)}

@@ -118,6 +118,12 @@ export default function App() {
                     missingUpstreamData = true;
                 }
             }
+            // From Prompt Template
+            else if (source.type === NodeType.PROMPT_TEMPLATE) {
+                if (source.data.prompt) {
+                    inputPrompts.push(source.data.prompt);
+                }
+            }
         });
 
         // Check upstream validity
@@ -396,6 +402,24 @@ export default function App() {
                         >
                             <svg className="w-6 h-6 text-gray-300 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             <span className="hidden md:block absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Add Image</span>
+                        </button>
+                        
+                        {/* Add Template Node */}
+                        <button 
+                            className="p-3 hover:bg-white/10 rounded-full transition-colors group relative flex-shrink-0"
+                            onClick={() => {
+                                const id = `node-${Date.now()}`;
+                                setNodes(prev => [...prev, {
+                                    id,
+                                    type: NodeType.PROMPT_TEMPLATE,
+                                    position: { x: 200, y: 200 },
+                                    data: { prompt: '' },
+                                    label: 'Template'
+                                }]);
+                            }}
+                        >
+                            <svg className="w-6 h-6 text-teal-400 group-hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <span className="hidden md:block absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Add Template</span>
                         </button>
 
                         {/* Add Nano Node */}
