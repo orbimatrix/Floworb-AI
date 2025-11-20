@@ -53,6 +53,7 @@ export enum ViewState {
   PRICING = 'PRICING',
   AUTH = 'AUTH',
   DASHBOARD = 'DASHBOARD',
+  SAVED_CREATIONS = 'SAVED_CREATIONS',
 }
 
 export interface UserSession {

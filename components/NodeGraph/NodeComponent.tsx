@@ -5,8 +5,9 @@ import { Node, NodeType, NodeData } from '../../types';
 interface NodeComponentProps {
   node: Node;
   onMouseDown: (e: React.MouseEvent) => void;
-  onStartConnect: (e: React.MouseEvent) => void;
-  onEndConnect: (e: React.MouseEvent) => void;
+  onTouchStart: (e: React.TouchEvent) => void;
+  onStartConnect: (e: React.MouseEvent | React.TouchEvent) => void;
+  onEndConnect: (e: React.MouseEvent | React.TouchEvent) => void;
   onChange: (data: Partial<NodeData>) => void;
   onProcess: () => void;
   onDelete: () => void;
@@ -15,6 +16,7 @@ interface NodeComponentProps {
 export const NodeComponent: React.FC<NodeComponentProps> = ({
   node,
   onMouseDown,
+  onTouchStart,
   onStartConnect,
   onEndConnect,
   onChange,
@@ -48,6 +50,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
              <div 
                 className="h-32 w-full bg-background/50 rounded border border-dashed border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors"
                 onClick={() => fileInputRef.current?.click()}
+                onTouchEnd={() => fileInputRef.current?.click()}
              >
                 {node.data.imageData ? (
                     <img src={node.data.imageData} alt="Input" className="w-full h-full object-cover" />
@@ -76,6 +79,8 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                     placeholder="E.g. 'Add a neon glow', 'Make it cyberpunk'..."
                     value={node.data.prompt || ''}
                     onChange={(e) => onChange({ prompt: e.target.value })}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                 />
                 <div className="flex justify-between items-center">
                     <span className={`text-[10px] uppercase tracking-wider font-bold ${
@@ -87,6 +92,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                     </span>
                     <button 
                         onClick={(e) => { e.stopPropagation(); onProcess(); }}
+                        onTouchEnd={(e) => { e.stopPropagation(); onProcess(); }}
                         disabled={node.data.status === 'processing'}
                         className="bg-secondary hover:bg-pink-600 text-white text-xs px-3 py-1 rounded shadow-lg transition-colors disabled:opacity-50"
                     >
@@ -111,6 +117,8 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                     placeholder="E.g. 'Describe this image in detail', 'Analyze the composition'..."
                     value={node.data.prompt || ''}
                     onChange={(e) => onChange({ prompt: e.target.value })}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                 />
                 <div className="flex justify-between items-center">
                     <span className={`text-[10px] uppercase tracking-wider font-bold ${
@@ -122,6 +130,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                     </span>
                     <button 
                         onClick={(e) => { e.stopPropagation(); onProcess(); }}
+                        onTouchEnd={(e) => { e.stopPropagation(); onProcess(); }}
                         disabled={node.data.status === 'processing'}
                         className="bg-accent hover:bg-violet-600 text-white text-xs px-3 py-1 rounded shadow-lg transition-colors disabled:opacity-50"
                     >
@@ -131,7 +140,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                 
                 {/* Result Display for Text Output */}
                 {node.data.analysisResult && (
-                    <div className="mt-2 max-h-32 overflow-y-auto bg-black/30 p-2 rounded border border-white/10 text-[11px] text-gray-300 leading-relaxed">
+                    <div className="mt-2 max-h-32 overflow-y-auto bg-black/30 p-2 rounded border border-white/10 text-[11px] text-gray-300 leading-relaxed" onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
                         {node.data.analysisResult}
                     </div>
                 )}
@@ -158,6 +167,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                         download="flowgen-output.png"
                         className="absolute bottom-2 right-2 bg-black/70 text-white p-1 rounded hover:bg-primary"
                         onClick={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
                     >
                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     </a>
@@ -197,6 +207,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
       className={`absolute w-72 bg-surface/95 backdrop-blur-md rounded-lg border ${borderColor} ${shadowColor} flex flex-col z-10 select-none transition-shadow duration-300`}
       style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }}
       onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
     >
       {/* Node Header */}
       <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-lg">
@@ -211,6 +222,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
             <div className={`w-2 h-2 rounded-full ${headerColor} shadow-[0_0_5px_currentColor]`} />
             <button 
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                onTouchEnd={(e) => { e.stopPropagation(); onDelete(); }}
                 className="text-gray-500 hover:text-red-500 transition-colors"
                 title="Delete Node"
             >
@@ -234,6 +246,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
              className="absolute -left-3 -top-24 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-white cursor-crosshair node-handle z-20"
              title="Input"
              onMouseUp={onEndConnect}
+             onTouchEnd={onEndConnect}
            >
              <div className="w-2 h-2 bg-gray-400 rounded-full" />
            </div>
@@ -245,6 +258,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
              className="absolute -right-3 -top-24 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-primary cursor-crosshair node-handle z-20"
              title="Output"
              onMouseDown={onStartConnect}
+             onTouchStart={onStartConnect}
            >
              <div className="w-2 h-2 bg-primary rounded-full" />
            </div>

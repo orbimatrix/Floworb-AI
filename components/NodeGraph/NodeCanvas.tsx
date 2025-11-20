@@ -29,57 +29,64 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
   
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // --- Helper to unify events ---
+  const getClientCoords = (e: React.MouseEvent | React.TouchEvent | any) => {
+      if (e.touches && e.touches.length > 0) {
+          return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+      }
+      return { clientX: e.clientX, clientY: e.clientY };
+  };
+
   // --- Dragging Logic ---
-  const handleMouseDownNode = (e: React.MouseEvent, id: string) => {
+  const handleStartNodeDrag = (e: React.MouseEvent | React.TouchEvent, id: string) => {
     e.stopPropagation();
     const node = nodes.find(n => n.id === id);
     if (!node) return;
     
-    // Calculate offset from node top-left to mouse
+    const coords = getClientCoords(e);
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const canvasRect = canvasRef.current?.getBoundingClientRect();
     
-    if (canvasRect) {
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      });
-    }
+    setDragOffset({
+      x: coords.clientX - rect.left,
+      y: coords.clientY - rect.top
+    });
     setDraggingNodeId(id);
   };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+  const handleMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
+      const coords = getClientCoords(e);
+
       setMousePos({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: coords.clientX - rect.left,
+        y: coords.clientY - rect.top
       });
-    }
 
-    if (draggingNodeId && canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left - dragOffset.x;
-      const y = e.clientY - rect.top - dragOffset.y;
+      if (draggingNodeId) {
+        e.preventDefault(); // Prevent scrolling while dragging
+        const x = coords.clientX - rect.left - dragOffset.x;
+        const y = coords.clientY - rect.top - dragOffset.y;
 
-      onNodesChange(nodes.map(n => 
-        n.id === draggingNodeId ? { ...n, position: { x, y } } : n
-      ));
+        onNodesChange(nodes.map(n => 
+          n.id === draggingNodeId ? { ...n, position: { x, y } } : n
+        ));
+      }
     }
   }, [draggingNodeId, dragOffset, nodes, onNodesChange]);
 
-  const handleMouseUp = () => {
+  const handleEnd = () => {
     setDraggingNodeId(null);
     setConnectingSourceId(null);
   };
 
   // --- Connection Logic ---
-  const handleStartConnection = (e: React.MouseEvent, nodeId: string) => {
+  const handleStartConnection = (e: React.MouseEvent | React.TouchEvent, nodeId: string) => {
     e.stopPropagation();
     setConnectingSourceId(nodeId);
   };
 
-  const handleEndConnection = (e: React.MouseEvent, targetId: string) => {
+  const handleEndConnection = (e: React.MouseEvent | React.TouchEvent, targetId: string) => {
     e.stopPropagation();
     if (connectingSourceId && connectingSourceId !== targetId) {
       // Check if connection already exists
@@ -116,9 +123,13 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
   return (
     <div 
       ref={canvasRef}
-      className="w-full h-full relative overflow-hidden bg-background cursor-crosshair"
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      className="w-full h-full relative overflow-hidden bg-background cursor-crosshair touch-none"
+      onMouseMove={handleMove}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
+      onTouchMove={handleMove}
+      onTouchEnd={handleEnd}
+      onTouchCancel={handleEnd}
     >
       {/* Grid Background */}
       <div 
@@ -162,7 +173,8 @@ export const NodeCanvas: React.FC<NodeCanvasProps> = ({
         <NodeComponent
           key={node.id}
           node={node}
-          onMouseDown={(e) => handleMouseDownNode(e, node.id)}
+          onMouseDown={(e) => handleStartNodeDrag(e, node.id)}
+          onTouchStart={(e) => handleStartNodeDrag(e, node.id)}
           onStartConnect={(e) => handleStartConnection(e, node.id)}
           onEndConnect={(e) => handleEndConnection(e, node.id)}
           onDelete={() => onNodeDelete(node.id)}
