@@ -82,30 +82,65 @@ export default function App() {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
-    // Logic for NANO_EDIT (Image -> Image)
+    // Logic for NANO_EDIT (Generates or Edits Images)
     if (node.type === NodeType.NANO_EDIT) {
-        // 1. Check Inputs
-        const inputConnection = connections.find(c => c.targetId === nodeId);
-        if (!inputConnection) {
-          showNotification("No input image connected!", 'error');
+        // Gather Inputs
+        const inputConnections = connections.filter(c => c.targetId === nodeId);
+        
+        const inputImages: string[] = [];
+        const inputPrompts: string[] = [];
+
+        // Add local prompt
+        if (node.data.prompt) {
+            inputPrompts.push(node.data.prompt);
+        }
+
+        // Process connected nodes
+        let missingUpstreamData = false;
+
+        inputConnections.forEach(conn => {
+            const source = nodes.find(n => n.id === conn.sourceId);
+            if (!source) return;
+
+            // From Image Input
+            if (source.type === NodeType.INPUT_IMAGE && source.data.imageData) {
+                inputImages.push(source.data.imageData);
+            }
+            // From Previous Nano Node
+            else if (source.type === NodeType.NANO_EDIT && source.data.outputImage) {
+                inputImages.push(source.data.outputImage);
+            }
+            // From Gemini Pro (Use analysis as prompt)
+            else if (source.type === NodeType.GEMINI_PRO) {
+                if (source.data.analysisResult) {
+                    inputPrompts.push(source.data.analysisResult);
+                } else {
+                    missingUpstreamData = true;
+                }
+            }
+        });
+
+        // Check upstream validity
+        if (missingUpstreamData) {
+            showNotification("Upstream Gemini node hasn't run yet. Please run it first.", 'error');
+            updateNodeData(nodeId, { status: 'error', errorMessage: "Waiting for Gemini output" });
+            return;
+        }
+
+        // Validation
+        if (inputImages.length === 0 && inputPrompts.length === 0) {
+          showNotification("Nano Node needs at least an input image or a prompt!", 'error');
+          updateNodeData(nodeId, { status: 'error', errorMessage: "Missing inputs" });
           return;
         }
 
-        const sourceNode = nodes.find(n => n.id === inputConnection.sourceId);
-        if (!sourceNode?.data.imageData) {
-          showNotification("Source node has no image data!", 'error');
-          return;
-        }
-
-        // 2. Update Status
+        // Update Status
         updateNodeData(nodeId, { status: 'processing', errorMessage: undefined });
 
         try {
-          const prompt = node.data.prompt || "Enhance image";
-          
-          const resultBase64 = await GeminiService.editImageWithNano(
-            sourceNode.data.imageData,
-            prompt
+          const resultBase64 = await GeminiService.generateOrEditImageWithNano(
+            inputPrompts,
+            inputImages
           );
 
           updateNodeData(nodeId, { status: 'success' });
@@ -128,30 +163,31 @@ export default function App() {
     
     // Logic for GEMINI_PRO (Image/Text -> Text Analysis)
     else if (node.type === NodeType.GEMINI_PRO) {
-        const inputConnection = connections.find(c => c.targetId === nodeId);
+        const inputConnections = connections.filter(c => c.targetId === nodeId);
         let imageData: string | undefined = undefined;
+        
+        // Find first available image from inputs
+        const imageSource = inputConnections.map(c => nodes.find(n => n.id === c.sourceId))
+            .find(n => n?.data.imageData || n?.data.outputImage);
 
-        if (inputConnection) {
-            const sourceNode = nodes.find(n => n.id === inputConnection.sourceId);
-            if (sourceNode?.data.imageData) {
-                imageData = sourceNode.data.imageData;
-            }
-            // Check if source has outputImage (like from Nano Edit)
-            if (sourceNode?.data.outputImage) {
-                imageData = sourceNode.data.outputImage;
-            }
+        if (imageSource) {
+            imageData = imageSource.data.imageData || imageSource.data.outputImage;
         }
 
         updateNodeData(nodeId, { status: 'processing', errorMessage: undefined });
 
         try {
-            const prompt = node.data.prompt || "Analyze this";
+            const prompt = node.data.prompt || "Analyze this image and provide a detailed prompt for image generation.";
             const resultText = await GeminiService.analyzeWithGeminiPro(prompt, imageData);
             
             updateNodeData(nodeId, { 
                 status: 'success',
                 analysisResult: resultText
             });
+            
+            // Automatically notify connected Nano nodes that data is ready? 
+            // In a real app, we might trigger downstream, but here we let user click Run.
+            showNotification("Analysis complete. Ready to use in Nano node.", 'success');
 
         } catch (error: any) {
              console.error(error);

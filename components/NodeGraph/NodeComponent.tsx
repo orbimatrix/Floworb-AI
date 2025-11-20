@@ -76,7 +76,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                 <textarea 
                     className="w-full bg-background/50 rounded border border-border p-2 text-xs text-white focus:border-secondary outline-none resize-none"
                     rows={3}
-                    placeholder="E.g. 'Add a neon glow', 'Make it cyberpunk'..."
+                    placeholder="Describe the image to generate, or the edit to apply..."
                     value={node.data.prompt || ''}
                     onChange={(e) => onChange({ prompt: e.target.value })}
                     onMouseDown={(e) => e.stopPropagation()}
@@ -114,7 +114,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                 <textarea 
                     className="w-full bg-background/50 rounded border border-border p-2 text-xs text-white focus:border-accent outline-none resize-none"
                     rows={3}
-                    placeholder="E.g. 'Describe this image in detail', 'Analyze the composition'..."
+                    placeholder="E.g. 'Create a prompt for a sci-fi city'..."
                     value={node.data.prompt || ''}
                     onChange={(e) => onChange({ prompt: e.target.value })}
                     onMouseDown={(e) => e.stopPropagation()}
@@ -141,6 +141,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
                 {/* Result Display for Text Output */}
                 {node.data.analysisResult && (
                     <div className="mt-2 max-h-32 overflow-y-auto bg-black/30 p-2 rounded border border-white/10 text-[11px] text-gray-300 leading-relaxed" onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
+                        <span className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Output:</span>
                         {node.data.analysisResult}
                     </div>
                 )}
@@ -234,16 +235,15 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
       </div>
 
       {/* Node Body */}
-      <div className="p-3">
+      <div className="p-3 relative">
         {renderContent()}
-      </div>
-
-      {/* Handles */}
-      <div className="relative h-0">
-        {/* Input Handle (Left) - Not for Input Node */}
+        
+        {/* Handles - Centered vertically relative to body/container */}
+        
+        {/* Input Handle (Left) */}
         {node.type !== NodeType.INPUT_IMAGE && (
              <div 
-             className="absolute -left-3 -top-24 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-white cursor-crosshair node-handle z-20"
+             className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-white cursor-crosshair node-handle z-20 shadow-md"
              title="Input"
              onMouseUp={onEndConnect}
              onTouchEnd={onEndConnect}
@@ -252,10 +252,10 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
            </div>
         )}
 
-        {/* Output Handle (Right) - Not for Output Node */}
-        {node.type !== NodeType.OUTPUT_PREVIEW && node.type !== NodeType.GEMINI_PRO && (
+        {/* Output Handle (Right) */}
+        {node.type !== NodeType.OUTPUT_PREVIEW && (
              <div 
-             className="absolute -right-3 -top-24 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-primary cursor-crosshair node-handle z-20"
+             className="absolute -right-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface border-2 border-gray-500 rounded-full flex items-center justify-center hover:border-primary cursor-crosshair node-handle z-20 shadow-md"
              title="Output"
              onMouseDown={onStartConnect}
              onTouchStart={onStartConnect}

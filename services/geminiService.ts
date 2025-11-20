@@ -4,8 +4,6 @@ import { GoogleGenAI, Modality } from "@google/genai";
 const API_KEY = process.env.API_KEY || '';
 
 // Initialize AI Client
-// Note: In a real SaaS, this might be proxied through a backend to hide the key, 
-// but for this architecture we use client-side direct calls as per instructions.
 let ai: GoogleGenAI | null = null;
 
 try {
@@ -20,42 +18,48 @@ try {
 
 export const GeminiService = {
   /**
-   * Uses Gemini 2.5 Flash Image (Nano Banana) to edit an image based on a prompt.
-   * Returns base64 image data.
+   * Uses Gemini 2.5 Flash Image (Nano Banana) to edit an image or generate one from scratch.
+   * Supports multiple inputs (images and prompts).
    */
-  editImageWithNano: async (base64Image: string, prompt: string): Promise<string> => {
+  generateOrEditImageWithNano: async (prompts: string[], images: string[]): Promise<string> => {
     if (!ai) throw new Error("AI Service not initialized. Check API Key.");
 
-    // Strip prefix if present (e.g., "data:image/jpeg;base64,")
-    const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+    const parts: any[] = [];
+
+    // Add images (Editing Mode or Multimodal Generation)
+    images.forEach(img => {
+        const cleanBase64 = img.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+        parts.push({
+            inlineData: {
+                data: cleanBase64,
+                mimeType: 'image/jpeg',
+            },
+        });
+    });
+
+    // Add text prompts
+    const combinedPrompt = prompts.join("\n\n") || (images.length > 0 ? "Enhance this image" : "A creative abstract image");
+    parts.push({
+        text: combinedPrompt,
+    });
 
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
-          parts: [
-            {
-              inlineData: {
-                data: cleanBase64,
-                mimeType: 'image/jpeg', // Standardize on jpeg for transmission
-              },
-            },
-            {
-              text: prompt || "Enhance this image",
-            },
-          ],
+          parts: parts,
         },
         config: {
           responseModalities: [Modality.IMAGE],
         },
       });
 
-      const parts = response.candidates?.[0]?.content?.parts;
-      if (!parts || parts.length === 0) {
+      const resultParts = response.candidates?.[0]?.content?.parts;
+      if (!resultParts || resultParts.length === 0) {
         throw new Error("No image generated.");
       }
 
-      const imagePart = parts.find(p => p.inlineData);
+      const imagePart = resultParts.find(p => p.inlineData);
       
       if (imagePart && imagePart.inlineData) {
           return `data:image/png;base64,${imagePart.inlineData.data}`;
@@ -96,7 +100,6 @@ export const GeminiService = {
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: { parts },
-            // Note: Thinking Config is for 2.5 series, not 3.0 Pro preview currently.
         });
         
         return response.text || "No response text generated.";
