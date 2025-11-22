@@ -222,6 +222,57 @@ export default function App() {
              showNotification("Analysis failed.", 'error');
         }
     }
+    
+    // Logic for VEO_VIDEO (Veo 3.1 Generation)
+    else if (node.type === NodeType.VEO_VIDEO) {
+        const inputConnections = connections.filter(c => c.targetId === nodeId);
+        let imageData: string | undefined = undefined;
+        let upstreamPrompt: string | undefined = undefined;
+
+        // Gather inputs (optional image for img2vid)
+        inputConnections.forEach(conn => {
+            const source = nodes.find(n => n.id === conn.sourceId);
+            if (!source) return;
+
+            if (source.type === NodeType.INPUT_IMAGE && source.data.imageData) {
+                imageData = source.data.imageData;
+            } else if (source.type === NodeType.NANO_EDIT && source.data.outputImage) {
+                imageData = source.data.outputImage;
+            } else if (source.type === NodeType.GEMINI_PRO && source.data.analysisResult) {
+                upstreamPrompt = source.data.analysisResult;
+            }
+        });
+
+        const finalPrompt = node.data.prompt || upstreamPrompt;
+
+        if (!finalPrompt) {
+             showNotification("Veo requires a text prompt (internal or from Gemini Pro).", 'error');
+             updateNodeData(nodeId, { status: 'error', errorMessage: "Missing prompt" });
+             return;
+        }
+
+        updateNodeData(nodeId, { status: 'processing', errorMessage: undefined });
+        showNotification("Video generation started. This may take a few minutes.", 'info');
+
+        try {
+            // This is a long polling operation
+            const videoUrl = await GeminiService.generateVideoWithVeo(finalPrompt, imageData);
+            
+            updateNodeData(nodeId, { 
+                status: 'success',
+                videoUri: videoUrl
+            });
+            showNotification("Veo Video Generated Successfully!", 'success');
+
+        } catch (error: any) {
+            console.error("Veo Error:", error);
+            updateNodeData(nodeId, { 
+                status: 'error', 
+                errorMessage: error.message || "Video generation failed" 
+            });
+            showNotification("Video generation failed. Check API key/Quota.", 'error');
+        }
+    }
   };
 
   const updateNodeData = (id: string, data: any) => {
@@ -476,6 +527,24 @@ export default function App() {
                             <span className="hidden md:block absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Add Gemini Pro</span>
                         </button>
 
+                        {/* Add Veo Video Node */}
+                        <button 
+                            className="p-3 hover:bg-white/10 rounded-full transition-colors group relative flex-shrink-0"
+                            onClick={() => {
+                                const id = `node-${Date.now()}`;
+                                setNodes(prev => [...prev, {
+                                    id,
+                                    type: NodeType.VEO_VIDEO,
+                                    position: { x: 450, y: 100 },
+                                    data: { prompt: '' },
+                                    label: 'Veo Video'
+                                }]);
+                            }}
+                        >
+                            <svg className="w-6 h-6 text-orange-400 group-hover:text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            <span className="hidden md:block absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Add Veo Video</span>
+                        </button>
+
                         {/* Add Output Node */}
                         <button 
                             className="p-3 hover:bg-white/10 rounded-full transition-colors group relative flex-shrink-0"
@@ -484,7 +553,7 @@ export default function App() {
                                 setNodes(prev => [...prev, {
                                     id,
                                     type: NodeType.OUTPUT_PREVIEW,
-                                    position: { x: 500, y: 100 },
+                                    position: { x: 550, y: 100 },
                                     data: {},
                                     label: 'Preview'
                                 }]);

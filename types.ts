@@ -3,6 +3,7 @@ export enum NodeType {
   INPUT_IMAGE = 'INPUT_IMAGE',
   NANO_EDIT = 'NANO_EDIT', // The "Nano Banana" / Gemini Flash Image node
   GEMINI_PRO = 'GEMINI_PRO', // The Gemini 3 Pro node for complex reasoning
+  VEO_VIDEO = 'VEO_VIDEO', // Veo 3 Video Generation Node
   PROMPT_TEMPLATE = 'PROMPT_TEMPLATE', // Reusable text prompts
   OUTPUT_PREVIEW = 'OUTPUT_PREVIEW',
 }
@@ -17,7 +18,7 @@ export interface NodeData {
   imageName?: string;
   imageData?: string; // Base64
   
-  // Nano Edit & Gemini Pro Node Data
+  // Nano Edit & Gemini Pro & Veo Node Data
   prompt?: string;
   status?: 'idle' | 'processing' | 'success' | 'error';
   errorMessage?: string;
@@ -27,6 +28,9 @@ export interface NodeData {
   
   // Output Node Data
   outputImage?: string; // Base64
+  
+  // Veo Specific
+  videoUri?: string; // Blob URL for the generated video
 }
 
 export interface Node {
