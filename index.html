@@ -20,20 +20,62 @@
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
             },
+            animation: {
+              blob: "blob 7s infinite",
+              float: "float 6s ease-in-out infinite",
+              'spin-slow': 'spin 12s linear infinite',
+            },
+            keyframes: {
+              blob: {
+                "0%": { transform: "translate(0px, 0px) scale(1)" },
+                "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+                "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+                "100%": { transform: "translate(0px, 0px) scale(1)" }
+              },
+              float: {
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(-20px)" }
+              }
+            }
           },
         },
       }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      body { background-color: #0f1117; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow: hidden; }
+      body { background-color: #0f1117; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+      
       /* Custom scrollbar */
       ::-webkit-scrollbar { width: 8px; height: 8px; }
-      ::-webkit-scrollbar-track { background: #1e212b; }
-      ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+      ::-webkit-scrollbar-track { background: #0f1117; }
+      ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+      
       .node-handle { transition: transform 0.2s; }
       .node-handle:hover { transform: scale(1.2); }
+
+      /* Utility classes for animations */
+      .animation-delay-2000 { animation-delay: 2s; }
+      .animation-delay-4000 { animation-delay: 4s; }
+      
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      
+      .glass-panel:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .text-gradient {
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-image: linear-gradient(to right, #c084fc, #ec4899, #6366f1);
+      }
     </style>
   <script type="importmap">
 {
