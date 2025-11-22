@@ -52,9 +52,28 @@ export enum ViewState {
   LANDING = 'LANDING',
   FEATURES = 'FEATURES',
   PRICING = 'PRICING',
+  RESOURCES = 'RESOURCES',
   AUTH = 'AUTH',
   DASHBOARD = 'DASHBOARD',
   SAVED_CREATIONS = 'SAVED_CREATIONS',
+  
+  // Product Pages
+  CHANGELOG = 'CHANGELOG',
+  DOCS = 'DOCS',
+  
+  // Resource Pages
+  COMMUNITY = 'COMMUNITY',
+  HELP_CENTER = 'HELP_CENTER',
+  TUTORIALS = 'TUTORIALS',
+  
+  // Company Pages
+  ABOUT = 'ABOUT',
+  BLOG = 'BLOG',
+  CAREERS = 'CAREERS',
+  
+  // Legal Pages
+  TERMS = 'TERMS',
+  PRIVACY = 'PRIVACY'
 }
 
 export interface UserSession {

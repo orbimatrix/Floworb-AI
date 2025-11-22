@@ -60,6 +60,24 @@ const MOCK_SAVED_CREATIONS = [
   }
 ];
 
+// Define which views are part of the public website vs the app
+const PUBLIC_VIEWS = [
+    ViewState.LANDING, 
+    ViewState.FEATURES, 
+    ViewState.PRICING, 
+    ViewState.RESOURCES,
+    ViewState.CHANGELOG,
+    ViewState.DOCS,
+    ViewState.COMMUNITY,
+    ViewState.HELP_CENTER,
+    ViewState.TUTORIALS,
+    ViewState.ABOUT,
+    ViewState.BLOG,
+    ViewState.CAREERS,
+    ViewState.TERMS,
+    ViewState.PRIVACY
+];
+
 export default function App() {
   const [view, setView] = useState<ViewState>(ViewState.LANDING);
   const [nodes, setNodes] = useState<Node[]>(INITIAL_NODES);
@@ -241,7 +259,7 @@ export default function App() {
 
   // --- Renders ---
 
-  if (view === ViewState.LANDING || view === ViewState.FEATURES || view === ViewState.PRICING) {
+  if (PUBLIC_VIEWS.includes(view)) {
     return (
         <LandingPage 
             currentView={view} 
