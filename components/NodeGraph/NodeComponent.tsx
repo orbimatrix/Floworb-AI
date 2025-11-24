@@ -224,16 +224,35 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
       case NodeType.OUTPUT_PREVIEW:
         return (
             <div className="h-48 w-full bg-background/50 rounded border border-border flex items-center justify-center overflow-hidden relative">
-                {node.data.outputImage ? (
+                {node.data.videoUri ? (
+                    <video 
+                        src={node.data.videoUri} 
+                        controls 
+                        className="w-full h-full object-contain" 
+                    />
+                ) : node.data.outputImage ? (
                     <img src={node.data.outputImage} alt="Output" className="w-full h-full object-contain" />
                 ) : (
                     <span className="text-xs text-gray-500">Waiting for result...</span>
                 )}
+                
+                {/* Download Buttons */}
                 {node.data.outputImage && (
                     <a 
                         href={node.data.outputImage} 
                         download="flowgen-output.png"
                         className="absolute bottom-2 right-2 bg-black/70 text-white p-1 rounded hover:bg-primary"
+                        onClick={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
+                    >
+                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    </a>
+                )}
+                {node.data.videoUri && (
+                    <a 
+                        href={node.data.videoUri} 
+                        download="flowgen-video.mp4"
+                        className="absolute bottom-2 right-2 bg-black/70 text-white p-1 rounded hover:bg-orange-500"
                         onClick={(e) => e.stopPropagation()}
                         onTouchEnd={(e) => e.stopPropagation()}
                     >
@@ -339,7 +358,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({
         )}
 
         {/* Output Handle (Right) */}
-        {node.type !== NodeType.OUTPUT_PREVIEW && node.type !== NodeType.VEO_VIDEO && (
+        {node.type !== NodeType.OUTPUT_PREVIEW && (
              <div 
              className="absolute -right-5 top-14 w-8 h-8 bg-transparent flex items-center justify-center cursor-crosshair node-handle z-20 group"
              title="Output"

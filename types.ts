@@ -1,4 +1,5 @@
 
+
 export enum NodeType {
   INPUT_IMAGE = 'INPUT_IMAGE',
   NANO_EDIT = 'NANO_EDIT', // The "Nano Banana" / Gemini Flash Image node
@@ -60,6 +61,7 @@ export enum ViewState {
   AUTH = 'AUTH',
   DASHBOARD = 'DASHBOARD',
   SAVED_CREATIONS = 'SAVED_CREATIONS',
+  PROFILE = 'PROFILE', // New ViewState
   
   // Product Pages
   CHANGELOG = 'CHANGELOG',
@@ -84,4 +86,13 @@ export interface UserSession {
   id: string;
   name: string;
   email: string;
+  avatar: string;
+  plan: 'Free' | 'Pro' | 'Enterprise';
+  memberSince: string;
+  stats: {
+      workflowsCreated: number;
+      imagesGenerated: number;
+      videosGenerated: number;
+      apiCalls: number;
+  }
 }

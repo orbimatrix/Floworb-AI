@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { ViewState } from '../types';
+import { Logo } from './Logo';
 
 interface LandingPageProps {
     currentView: ViewState;
@@ -8,9 +9,127 @@ interface LandingPageProps {
     onLogin: () => void;
 }
 
+interface BlogPost {
+    id: number;
+    title: string;
+    date: string;
+    tag: string;
+    image: string;
+    readTime: string;
+    content: React.ReactNode;
+}
+
+const BLOG_POSTS: BlogPost[] = [
+    {
+        id: 1,
+        title: "The Future of Node-Based AI",
+        date: "Oct 28, 2023",
+        tag: "Opinion",
+        image: "https://picsum.photos/800/400?random=101",
+        readTime: "5 min read",
+        content: (
+            <>
+                <p>The landscape of Artificial Intelligence is shifting rapidly. As models become more powerful, the complexity of interacting with them increases. We believe that visual, node-based programming is the key to unlocking the full potential of these tools for creatives.</p>
+                <p>By treating AI models as functional blocks, we can chain them together in ways that were previously impossible without writing complex code. This democratization of AI workflow construction will lead to an explosion of creativity.</p>
+                <h3>Why Visual Nodes?</h3>
+                <p>Text-based coding is powerful, but it's not always the best way to visualize data flow. In image generation pipelines, seeing how an image transforms from one step to the next is crucial. FlowGen AI bridges this gap.</p>
+            </>
+        )
+    },
+    {
+        id: 2,
+        title: "Optimizing Gemini 3 Pro Costs",
+        date: "Oct 25, 2023",
+        tag: "Engineering",
+        image: "https://picsum.photos/800/400?random=102",
+        readTime: "8 min read",
+        content: (
+            <>
+                <p>Gemini 3 Pro is a beast of a model. Its reasoning capabilities are unmatched, but with great power comes great token usage. In this guide, we'll explore strategies to optimize your prompts and workflows to get the most out of your Pro plan.</p>
+                <ul>
+                    <li>Use concise system instructions.</li>
+                    <li>Cache common context where possible.</li>
+                    <li>Chain smaller models for pre-processing.</li>
+                </ul>
+                <p>By implementing these strategies, our engineering team reduced API costs by 40% while maintaining the same quality of output.</p>
+            </>
+        )
+    },
+    {
+        id: 3,
+        title: "Community Spotlight: Oct",
+        date: "Oct 20, 2023",
+        tag: "Community",
+        image: "https://picsum.photos/800/400?random=103",
+        readTime: "4 min read",
+        content: (
+            <>
+                <p>This month, we are highlighting the incredible work of our community members. From photorealistic landscapes to stylized anime characters, the variety of creations is astounding.</p>
+                <h3>Featured Artist: Elena R.</h3>
+                <p>Elena has been using FlowGen to create concept art for her upcoming indie game. Her unique workflow combines Gemini 3 for lore generation and Nano Banana for rapid visual iteration.</p>
+            </>
+        )
+    },
+    {
+        id: 4,
+        title: "Introducing Nano Banana",
+        date: "Oct 15, 2023",
+        tag: "Product",
+        image: "https://picsum.photos/800/400?random=104",
+        readTime: "3 min read",
+        content: (
+            <>
+                <p>We are thrilled to announce the integration of the Gemini 2.5 Flash Image model, affectionately known as "Nano Banana". This model is designed for speed.</p>
+                <p>With sub-second generation times, you can now iterate on your designs in real-time. This changes the game for live editing sessions and collaborative brainstorming.</p>
+            </>
+        )
+    },
+    {
+        id: 5,
+        title: "5 Workflows for Game Devs",
+        date: "Oct 10, 2023",
+        tag: "Tutorial",
+        image: "https://picsum.photos/800/400?random=105",
+        readTime: "12 min read",
+        content: (
+            <>
+                <p>Game development requires a massive amount of assets. Here are 5 workflows you can build in FlowGen AI today to speed up your pipeline:</p>
+                <ol>
+                    <li>Texture generation from text descriptions.</li>
+                    <li>Sprite sheet variation creation.</li>
+                    <li>UI icon set consistency checks.</li>
+                    <li>Concept art iteration.</li>
+                    <li>NPC dialogue portrait generation.</li>
+                </ol>
+            </>
+        )
+    },
+    {
+        id: 6,
+        title: "FlowGen raises Series A",
+        date: "Oct 01, 2023",
+        tag: "Company",
+        image: "https://picsum.photos/800/400?random=106",
+        readTime: "2 min read",
+        content: (
+            <>
+                <p>We are excited to share that FlowGen AI has raised its Series A funding round led by top-tier venture firms. This capital will allow us to expand our engineering team and accelerate the development of our next-generation features.</p>
+                <p>Thank you to our community for your continued support. We are just getting started.</p>
+            </>
+        )
+    }
+];
+
 export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigate, onLogin }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [activeBlogPost, setActiveBlogPost] = useState<BlogPost | null>(null);
     
+    // Wrapper to handle navigation and reset blog state
+    const handleNavigate = (view: ViewState) => {
+        setActiveBlogPost(null);
+        onNavigate(view);
+    };
+
     // --- Background Animation Component ---
     const AnimatedBackground = () => (
         <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
@@ -28,28 +147,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
 
             <div 
                 className="flex items-center gap-2 cursor-pointer z-50 relative" 
-                onClick={() => onNavigate(ViewState.LANDING)}
+                onClick={() => handleNavigate(ViewState.LANDING)}
             >
                 <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur opacity-50"></div>
-                    <div className="relative w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    <div className="relative w-10 h-10 flex items-center justify-center">
+                        <Logo className="w-10 h-10" />
                     </div>
                 </div>
-                <span className="font-bold text-xl tracking-tight text-white">FlowGen AI</span>
+                <span className="font-bold text-xl tracking-tight text-white ml-1">FlowGen AI</span>
             </div>
             
             {/* Desktop Nav */}
             <div className="hidden md:flex gap-8 items-center text-sm font-medium text-gray-300">
-                <button onClick={() => onNavigate(ViewState.FEATURES)} className={`hover:text-white transition-colors relative group ${currentView === ViewState.FEATURES ? 'text-white' : ''}`}>
+                <button onClick={() => handleNavigate(ViewState.FEATURES)} className={`hover:text-white transition-colors relative group ${currentView === ViewState.FEATURES ? 'text-white' : ''}`}>
                     Features
                     <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all group-hover:w-full ${currentView === ViewState.FEATURES ? 'w-full' : ''}`}></span>
                 </button>
-                <button onClick={() => onNavigate(ViewState.PRICING)} className={`hover:text-white transition-colors relative group ${currentView === ViewState.PRICING ? 'text-white' : ''}`}>
+                <button onClick={() => handleNavigate(ViewState.PRICING)} className={`hover:text-white transition-colors relative group ${currentView === ViewState.PRICING ? 'text-white' : ''}`}>
                     Pricing
                     <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all group-hover:w-full ${currentView === ViewState.PRICING ? 'w-full' : ''}`}></span>
                 </button>
-                <button onClick={() => onNavigate(ViewState.RESOURCES)} className={`hover:text-white transition-colors relative group ${currentView === ViewState.RESOURCES ? 'text-white' : ''}`}>
+                <button onClick={() => handleNavigate(ViewState.RESOURCES)} className={`hover:text-white transition-colors relative group ${currentView === ViewState.RESOURCES ? 'text-white' : ''}`}>
                     Resources
                     <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all group-hover:w-full ${currentView === ViewState.RESOURCES ? 'w-full' : ''}`}></span>
                 </button>
@@ -86,9 +205,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
             {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
                 <div className="fixed inset-0 bg-background/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center gap-8 md:hidden animate-in fade-in duration-200">
-                    <button onClick={() => { onNavigate(ViewState.FEATURES); setIsMobileMenuOpen(false); }} className="text-2xl font-medium text-gray-300 hover:text-white">Features</button>
-                    <button onClick={() => { onNavigate(ViewState.PRICING); setIsMobileMenuOpen(false); }} className="text-2xl font-medium text-gray-300 hover:text-white">Pricing</button>
-                    <button onClick={() => { onNavigate(ViewState.RESOURCES); setIsMobileMenuOpen(false); }} className="text-2xl font-medium text-gray-300 hover:text-white">Resources</button>
+                    <button onClick={() => { handleNavigate(ViewState.FEATURES); setIsMobileMenuOpen(false); }} className="text-2xl font-medium text-gray-300 hover:text-white">Features</button>
+                    <button onClick={() => { handleNavigate(ViewState.PRICING); setIsMobileMenuOpen(false); }} className="text-2xl font-medium text-gray-300 hover:text-white">Pricing</button>
+                    <button onClick={() => { handleNavigate(ViewState.RESOURCES); setIsMobileMenuOpen(false); }} className="text-2xl font-medium text-gray-300 hover:text-white">Resources</button>
                     <div className="flex flex-col gap-4 mt-8 w-64">
                         <button onClick={onLogin} className="w-full py-4 border border-white/20 rounded-xl text-center hover:bg-white/10 text-lg">Log In</button>
                         <button onClick={onLogin} className="w-full py-4 bg-gradient-to-r from-primary to-secondary rounded-xl text-center font-bold shadow-lg text-lg text-white">Start Building</button>
@@ -104,33 +223,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                 <div>
                     <h4 className="font-bold text-white mb-4">Product</h4>
                     <ul className="space-y-2 text-sm text-gray-400">
-                        <li><button onClick={() => onNavigate(ViewState.FEATURES)} className="hover:text-primary transition-colors">Features</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.PRICING)} className="hover:text-primary transition-colors">Pricing</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.CHANGELOG)} className="hover:text-primary transition-colors">Changelog</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.DOCS)} className="hover:text-primary transition-colors">Docs</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.FEATURES)} className="hover:text-primary transition-colors">Features</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.PRICING)} className="hover:text-primary transition-colors">Pricing</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.CHANGELOG)} className="hover:text-primary transition-colors">Changelog</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.DOCS)} className="hover:text-primary transition-colors">Docs</button></li>
                     </ul>
                 </div>
                 <div>
                     <h4 className="font-bold text-white mb-4">Resources</h4>
                     <ul className="space-y-2 text-sm text-gray-400">
-                        <li><button onClick={() => onNavigate(ViewState.COMMUNITY)} className="hover:text-primary transition-colors">Community</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.HELP_CENTER)} className="hover:text-primary transition-colors">Help Center</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.TUTORIALS)} className="hover:text-primary transition-colors">Tutorials</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.COMMUNITY)} className="hover:text-primary transition-colors">Community</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.HELP_CENTER)} className="hover:text-primary transition-colors">Help Center</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.TUTORIALS)} className="hover:text-primary transition-colors">Tutorials</button></li>
                     </ul>
                 </div>
                 <div>
                     <h4 className="font-bold text-white mb-4">Company</h4>
                     <ul className="space-y-2 text-sm text-gray-400">
-                        <li><button onClick={() => onNavigate(ViewState.ABOUT)} className="hover:text-primary transition-colors">About</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.BLOG)} className="hover:text-primary transition-colors">Blog</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.CAREERS)} className="hover:text-primary transition-colors">Careers</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.ABOUT)} className="hover:text-primary transition-colors">About</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.BLOG)} className="hover:text-primary transition-colors">Blog</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.CAREERS)} className="hover:text-primary transition-colors">Careers</button></li>
                     </ul>
                 </div>
                 <div>
                     <h4 className="font-bold text-white mb-4">Legal</h4>
                     <ul className="space-y-2 text-sm text-gray-400">
-                        <li><button onClick={() => onNavigate(ViewState.PRIVACY)} className="hover:text-primary transition-colors">Privacy</button></li>
-                        <li><button onClick={() => onNavigate(ViewState.TERMS)} className="hover:text-primary transition-colors">Terms</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.PRIVACY)} className="hover:text-primary transition-colors">Privacy</button></li>
+                        <li><button onClick={() => handleNavigate(ViewState.TERMS)} className="hover:text-primary transition-colors">Terms</button></li>
                     </ul>
                 </div>
             </div>
@@ -141,7 +260,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
     );
 
     // --- Generic Layouts for Simple Text Pages ---
-    // Fix: Make children optional to resolve TS error when used with explicit props
     const TextPageLayout = ({ title, lastUpdated, children }: { title: string, lastUpdated?: string, children?: React.ReactNode }) => (
         <div className="py-20 max-w-4xl mx-auto px-6 z-10 relative min-h-screen">
             <div className="text-center mb-16">
@@ -155,6 +273,75 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
     );
 
     // --- Specific Page Components ---
+    
+    const BlogPostView = ({ post }: { post: BlogPost }) => (
+        <div className="py-20 max-w-4xl mx-auto px-6 z-10 relative min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <button 
+                onClick={() => setActiveBlogPost(null)} 
+                className="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+            >
+                <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Back to Blog
+            </button>
+            
+            <div className="glass-panel p-8 md:p-12 rounded-3xl">
+                <div className="w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-8">
+                    <img src={post.image} className="w-full h-full object-cover" alt={post.title} />
+                </div>
+                
+                <div className="flex items-center gap-4 mb-6">
+                    <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-bold uppercase rounded-full tracking-wider">{post.tag}</span>
+                    <span className="text-gray-400 text-sm">{post.date}</span>
+                    <span className="text-gray-500 text-sm">• {post.readTime}</span>
+                </div>
+                
+                <h1 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">{post.title}</h1>
+                
+                <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed space-y-6">
+                    {post.content}
+                </div>
+                
+                <div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-between">
+                    <div className="text-sm text-gray-500">Share this post</div>
+                    <div className="flex gap-4">
+                        <button className="text-gray-400 hover:text-white transition-colors">Twitter</button>
+                        <button className="text-gray-400 hover:text-white transition-colors">LinkedIn</button>
+                        <button className="text-gray-400 hover:text-white transition-colors">Facebook</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const BlogPage = () => (
+        <div className="py-20 max-w-6xl mx-auto px-6 z-10 relative min-h-screen">
+            <h1 className="text-4xl md:text-6xl font-bold mb-16 text-center">FlowGen Blog</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {BLOG_POSTS.map((post) => (
+                    <div 
+                        key={post.id} 
+                        className="glass-panel rounded-2xl overflow-hidden group cursor-pointer hover:border-primary/50 transition-all flex flex-col h-full"
+                        onClick={() => setActiveBlogPost(post)}
+                    >
+                        <div className="h-48 bg-gray-800 overflow-hidden">
+                            <img src={post.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={post.title} />
+                        </div>
+                        <div className="p-6 flex flex-col flex-1">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-xs font-bold uppercase text-primary tracking-wider">{post.tag}</span>
+                                <span className="text-xs text-gray-500">{post.date}</span>
+                            </div>
+                            <h3 className="text-xl font-bold group-hover:text-primary transition-colors mb-2">{post.title}</h3>
+                            <div className="mt-auto text-xs text-gray-500">{post.readTime}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+    
+    // ... Other existing pages (Changelog, Docs, Community, HelpCenter, Tutorials, About, Careers, Terms, Privacy) remain the same ...
+    // To save space, I am including them in their minimized logic where possible or as is from previous file but wrapped in this new logic.
     
     const ChangelogPage = () => (
         <div className="py-20 max-w-3xl mx-auto px-6 z-10 relative min-h-screen">
@@ -355,35 +542,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
             </div>
         </div>
     );
-    
-    const BlogPage = () => (
-        <div className="py-20 max-w-6xl mx-auto px-6 z-10 relative min-h-screen">
-            <h1 className="text-4xl md:text-6xl font-bold mb-16 text-center">FlowGen Blog</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[
-                    { title: "The Future of Node-Based AI", date: "Oct 28, 2023", tag: "Opinion" },
-                    { title: "Optimizing Gemini 3 Pro Costs", date: "Oct 25, 2023", tag: "Engineering" },
-                    { title: "Community Spotlight: Oct", date: "Oct 20, 2023", tag: "Community" },
-                    { title: "Introducing Nano Banana", date: "Oct 15, 2023", tag: "Product" },
-                    { title: "5 Workflows for Game Devs", date: "Oct 10, 2023", tag: "Tutorial" },
-                    { title: "FlowGen raises Series A", date: "Oct 01, 2023", tag: "Company" }
-                ].map((post, i) => (
-                    <div key={i} className="glass-panel rounded-2xl overflow-hidden group cursor-pointer hover:border-primary/50 transition-all">
-                        <div className="h-48 bg-gray-800 overflow-hidden">
-                            <img src={`https://picsum.photos/600/400?random=${i + 60}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={post.title} />
-                        </div>
-                        <div className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="text-xs font-bold uppercase text-primary tracking-wider">{post.tag}</span>
-                                <span className="text-xs text-gray-500">{post.date}</span>
-                            </div>
-                            <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{post.title}</h3>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
 
     const CareersPage = () => (
         <div className="py-20 max-w-4xl mx-auto px-6 z-10 relative min-h-screen">
@@ -435,7 +593,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
 
     // --- Main Render Switch ---
     
-    // Helper for Main Home Views
     const HomePage = () => {
         const testimonials = [
             { text: "The Gemini integration is absolutely seamless. Changed how I prototype.", author: "Sarah J., UX Designer", role: "Design Lead" },
@@ -464,7 +621,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                 {/* Spotlight Effect */}
                 <div className="absolute top-[-50%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-b from-primary/20 via-transparent to-transparent rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full bg-white/5 border border-white/10 text-gray-300 text-xs font-medium hover:bg-white/10 cursor-pointer transition-all hover:border-primary/50 hover:text-white group backdrop-blur-sm" onClick={() => onNavigate(ViewState.FEATURES)}>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full bg-white/5 border border-white/10 text-gray-300 text-xs font-medium hover:bg-white/10 cursor-pointer transition-all hover:border-primary/50 hover:text-white group backdrop-blur-sm" onClick={() => handleNavigate(ViewState.FEATURES)}>
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
@@ -491,7 +648,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                         Start Building Free
                     </button>
                     <button 
-                        onClick={() => onNavigate(ViewState.FEATURES)}
+                        onClick={() => handleNavigate(ViewState.FEATURES)}
                         className="px-8 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-lg hover:bg-white/10 transition-colors backdrop-blur-sm flex items-center gap-2 group"
                     >
                         Explore Features
@@ -599,8 +756,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                     </div>
                 </div>
             </section>
-
-            {/* Testimonials */}
+            
+            {/* ... Rest of Homepage (Testimonials, CTA) ... */}
             <section className="py-24 overflow-hidden bg-black/20 border-y border-white/5">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl md:text-4xl font-bold mb-4">Loved by Creators</h2>
@@ -634,7 +791,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                 </div>
             </section>
 
-            {/* CTA */}
             <section className="py-32 relative overflow-hidden">
                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none"></div>
                  
@@ -654,7 +810,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
         </>
         );
     };
-    
+
     const FeaturesPage = () => (
         <div className="py-16 md:py-20 max-w-7xl mx-auto px-4 md:px-6 z-10 relative min-h-screen">
              <div className="text-center mb-16 md:mb-24">
@@ -879,7 +1035,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
             
             {/* Main Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-                <div className="glass-panel p-8 rounded-3xl hover:bg-white/5 transition-all cursor-pointer group" onClick={() => onNavigate(ViewState.DOCS)}>
+                <div className="glass-panel p-8 rounded-3xl hover:bg-white/5 transition-all cursor-pointer group" onClick={() => handleNavigate(ViewState.DOCS)}>
                     <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                     </div>
@@ -888,7 +1044,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                     <span className="text-primary font-medium flex items-center gap-2">Read Docs <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></span>
                 </div>
                 
-                <div className="glass-panel p-8 rounded-3xl hover:bg-white/5 transition-all cursor-pointer group" onClick={() => onNavigate(ViewState.TUTORIALS)}>
+                <div className="glass-panel p-8 rounded-3xl hover:bg-white/5 transition-all cursor-pointer group" onClick={() => handleNavigate(ViewState.TUTORIALS)}>
                     <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-6 text-purple-400 group-hover:scale-110 transition-transform">
                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
@@ -897,7 +1053,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                      <span className="text-primary font-medium flex items-center gap-2">Watch Now <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></span>
                 </div>
                 
-                <div className="glass-panel p-8 rounded-3xl hover:bg-white/5 transition-all cursor-pointer group" onClick={() => onNavigate(ViewState.COMMUNITY)}>
+                <div className="glass-panel p-8 rounded-3xl hover:bg-white/5 transition-all cursor-pointer group" onClick={() => handleNavigate(ViewState.COMMUNITY)}>
                     <div className="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center mb-6 text-pink-400 group-hover:scale-110 transition-transform">
                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </div>
@@ -910,7 +1066,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
             {/* Latest Articles */}
             <h2 className="text-2xl font-bold mb-8">Latest from the Blog</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div className="glass-panel rounded-2xl overflow-hidden hover:border-primary/50 transition-colors group cursor-pointer" onClick={() => onNavigate(ViewState.BLOG)}>
+                 <div className="glass-panel rounded-2xl overflow-hidden hover:border-primary/50 transition-colors group cursor-pointer" onClick={() => { setActiveBlogPost(BLOG_POSTS[0]); handleNavigate(ViewState.BLOG); }}>
                      <div className="h-48 bg-gray-800 overflow-hidden relative">
                          <img src="https://picsum.photos/800/400?random=1" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Blog 1" />
                          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-xs font-bold uppercase">Tutorial</div>
@@ -924,7 +1080,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                          </div>
                      </div>
                  </div>
-                 <div className="glass-panel rounded-2xl overflow-hidden hover:border-primary/50 transition-colors group cursor-pointer" onClick={() => onNavigate(ViewState.BLOG)}>
+                 <div className="glass-panel rounded-2xl overflow-hidden hover:border-primary/50 transition-colors group cursor-pointer" onClick={() => { setActiveBlogPost(BLOG_POSTS[1]); handleNavigate(ViewState.BLOG); }}>
                      <div className="h-48 bg-gray-800 overflow-hidden relative">
                          <img src="https://picsum.photos/800/400?random=2" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Blog 2" />
                          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-xs font-bold uppercase">Update</div>
@@ -957,7 +1113,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentView, onNavigat
                 {currentView === ViewState.HELP_CENTER && <HelpCenterPage />}
                 {currentView === ViewState.TUTORIALS && <TutorialsPage />}
                 {currentView === ViewState.ABOUT && <AboutPage />}
-                {currentView === ViewState.BLOG && <BlogPage />}
+                
+                {/* Logic for Blog View */}
+                {currentView === ViewState.BLOG && activeBlogPost && <BlogPostView post={activeBlogPost} />}
+                {currentView === ViewState.BLOG && !activeBlogPost && <BlogPage />}
+
                 {currentView === ViewState.CAREERS && <CareersPage />}
                 {currentView === ViewState.TERMS && <TermsPage />}
                 {currentView === ViewState.PRIVACY && <PrivacyPage />}

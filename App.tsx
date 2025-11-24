@@ -2,7 +2,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { NodeCanvas } from './components/NodeGraph/NodeCanvas';
 import { LandingPage } from './components/LandingPage';
-import { NodeType, Node, Connection, ViewState, WorkflowState } from './types';
+import { AuthPage } from './components/AuthPage';
+import { ProfilePage } from './components/ProfilePage';
+import { Logo } from './components/Logo';
+import { NodeType, Node, Connection, ViewState, WorkflowState, UserSession } from './types';
 import { GeminiService } from './services/geminiService';
 
 // Default Initial Workflow
@@ -85,14 +88,46 @@ export default function App() {
   const [notification, setNotification] = useState<{msg: string, type: 'error' | 'info' | 'success'} | null>(null);
   const [savedWorkflows, setSavedWorkflows] = useState(MOCK_SAVED_CREATIONS);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // User Session State
+  const [user, setUser] = useState<UserSession | null>(null);
 
-  // --- Auth Simulation ---
-  const handleLogin = () => {
-    setView(ViewState.AUTH);
-    // Simulate API delay
-    setTimeout(() => {
-      setView(ViewState.DASHBOARD);
-    }, 800);
+  // --- Auth Handlers ---
+  const handleLoginAttempt = (email: string, name: string = 'Demo User') => {
+    // Simulate setting session
+    setUser({
+        id: 'user-123',
+        name: name,
+        email: email,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
+        plan: 'Pro',
+        memberSince: new Date().toLocaleDateString(),
+        stats: {
+            workflowsCreated: 12,
+            imagesGenerated: 1450,
+            videosGenerated: 3,
+            apiCalls: 8942
+        }
+    });
+    showNotification(`Welcome back, ${name}!`, 'success');
+    setView(ViewState.DASHBOARD);
+  };
+
+  const handleLogout = () => {
+      setUser(null);
+      setView(ViewState.LANDING);
+      showNotification('Logged out successfully', 'info');
+  };
+
+  const handleUpdateProfile = (updates: Partial<UserSession>) => {
+      if (user) {
+          setUser({ ...user, ...updates });
+          showNotification('Profile updated successfully!', 'success');
+      }
+  };
+
+  const handleNavigateToAuth = () => {
+      setView(ViewState.AUTH);
   };
 
   // --- Workflow Logic ---
@@ -169,10 +204,15 @@ export default function App() {
 
           updateNodeData(nodeId, { status: 'success' });
 
+          // Update user stats (mock)
+          if(user) {
+              setUser({...user, stats: {...user.stats, imagesGenerated: user.stats.imagesGenerated + 1, apiCalls: user.stats.apiCalls + 1}});
+          }
+
           // Pass to Output
           const outConnections = connections.filter(c => c.sourceId === nodeId);
           outConnections.forEach(conn => {
-            updateNodeData(conn.targetId, { outputImage: resultBase64 });
+            updateNodeData(conn.targetId, { outputImage: resultBase64, videoUri: undefined });
           });
 
         } catch (error: any) {
@@ -209,8 +249,10 @@ export default function App() {
                 analysisResult: resultText
             });
             
-            // Automatically notify connected Nano nodes that data is ready? 
-            // In a real app, we might trigger downstream, but here we let user click Run.
+            if(user) {
+                setUser({...user, stats: {...user.stats, apiCalls: user.stats.apiCalls + 1}});
+            }
+            
             showNotification("Analysis complete. Ready to use in Nano node.", 'success');
 
         } catch (error: any) {
@@ -262,6 +304,18 @@ export default function App() {
                 status: 'success',
                 videoUri: videoUrl
             });
+
+            if(user) {
+                setUser({...user, stats: {...user.stats, videosGenerated: user.stats.videosGenerated + 1, apiCalls: user.stats.apiCalls + 1}});
+            }
+
+            // Pass to Output
+            const outConnections = connections.filter(c => c.sourceId === nodeId);
+            outConnections.forEach(conn => {
+                // Clear image, set video
+                updateNodeData(conn.targetId, { outputImage: undefined, videoUri: videoUrl });
+            });
+
             showNotification("Veo Video Generated Successfully!", 'success');
 
         } catch (error: any) {
@@ -305,29 +359,41 @@ export default function App() {
           nodesCount: nodes.length
       };
       setSavedWorkflows(prev => [newSave, ...prev]);
+      if(user) {
+          setUser({...user, stats: {...user.stats, workflowsCreated: user.stats.workflowsCreated + 1}});
+      }
       showNotification("Workflow Saved Successfully!", 'success');
   };
 
   // --- Renders ---
+
+  if (view === ViewState.AUTH) {
+    return (
+        <AuthPage 
+            onLogin={handleLoginAttempt}
+            onNavigateBack={() => setView(ViewState.LANDING)}
+        />
+    );
+  }
+
+  if (view === ViewState.PROFILE && user) {
+      return (
+          <ProfilePage 
+            user={user}
+            onLogout={handleLogout}
+            onBack={() => setView(ViewState.DASHBOARD)}
+            onUpdateProfile={handleUpdateProfile}
+          />
+      );
+  }
 
   if (PUBLIC_VIEWS.includes(view)) {
     return (
         <LandingPage 
             currentView={view} 
             onNavigate={setView} 
-            onLogin={handleLogin} 
+            onLogin={handleNavigateToAuth} 
         />
-    );
-  }
-
-  if (view === ViewState.AUTH) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-400 animate-pulse">Authenticating Secure Session...</p>
-        </div>
-      </div>
     );
   }
 
@@ -335,7 +401,7 @@ export default function App() {
     <header className="h-14 border-b border-border bg-surface flex items-center justify-between px-4 z-50 relative">
         <div className="flex items-center gap-6">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView(ViewState.LANDING)}>
-                <div className="w-6 h-6 bg-gradient-to-br from-primary to-secondary rounded"></div>
+                <Logo className="w-8 h-8" />
                 <h1 className="font-bold text-lg tracking-tight hidden md:block">FlowGen AI</h1>
                 <h1 className="font-bold text-lg tracking-tight md:hidden">FlowGen</h1>
             </div>
@@ -390,9 +456,25 @@ export default function App() {
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 System Ready
             </div>
-            <div className="w-8 h-8 rounded-full bg-gray-700 border border-gray-600">
-                <img src="https://picsum.photos/100/100" alt="User" className="w-full h-full rounded-full opacity-80" />
-            </div>
+            
+            {user ? (
+                 <div className="relative group cursor-pointer" onClick={() => setView(ViewState.PROFILE)}>
+                     <div className="w-8 h-8 rounded-full bg-gray-700 border border-gray-600 overflow-hidden">
+                        <img src={user.avatar} alt="User" className="w-full h-full" />
+                     </div>
+                     {/* Tooltip */}
+                     <div className="absolute top-full right-0 mt-2 w-32 bg-black/80 backdrop-blur rounded p-2 text-xs text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                         Profile
+                     </div>
+                 </div>
+            ) : (
+                <button 
+                    onClick={handleNavigateToAuth}
+                    className="text-sm font-medium text-white hover:text-primary transition-colors"
+                >
+                    Log In
+                </button>
+            )}
         </div>
 
         {/* Mobile Menu Dropdown */}
@@ -421,13 +503,20 @@ export default function App() {
                 )}
 
                 <div className="border-t border-white/10 pt-3 flex items-center gap-3 mt-1">
-                    <div className="w-10 h-10 rounded-full bg-gray-700 border border-white/10 overflow-hidden">
-                        <img src="https://picsum.photos/100/100" alt="User" className="w-full h-full opacity-80" />
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">Demo User</span>
-                        <span className="text-xs text-gray-400">Pro Plan</span>
-                    </div>
+                    {user ? (
+                        <>
+                            <div className="w-10 h-10 rounded-full bg-gray-700 border border-white/10 overflow-hidden" onClick={() => { setView(ViewState.PROFILE); setIsMobileMenuOpen(false); }}>
+                                <img src={user.avatar} alt="User" className="w-full h-full" />
+                            </div>
+                            <div className="flex flex-col" onClick={() => { setView(ViewState.PROFILE); setIsMobileMenuOpen(false); }}>
+                                <span className="text-sm font-bold text-white">{user.name}</span>
+                                <span className="text-xs text-gray-400">{user.plan} Plan</span>
+                            </div>
+                            <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="ml-auto text-xs text-red-400">Logout</button>
+                        </>
+                    ) : (
+                        <button onClick={() => { handleNavigateToAuth(); setIsMobileMenuOpen(false); }} className="w-full py-2 bg-primary text-white rounded font-bold">Log In</button>
+                    )}
                 </div>
             </div>
         )}
